@@ -20,19 +20,30 @@ docker compose up --build
 此指令會：
 - 建立 PostgreSQL 與 Django 服務
 - 自動套用資料庫遷移
+- **自動檢查並建立初始管理員帳號**（如果資料庫中沒有任何使用者）
 - 透過 http://localhost:8000 提供服務
+
+### 初次啟動
+
+初次啟動時，系統會自動建立範例資料，包含：
+- **管理員帳號：`admin` / `admin123`**
+- 使用者帳號：`user1` / `user123`
+- 3 個裝置類別（印表機、電腦、網路設備）
+- 3 個範例裝置和 IP 記錄
+
+> 如果資料庫已有使用者，則不會自動建立範例資料。
 
 ### 常用 Docker 指令
 
 ```bash
-# 匯入範例資料
-docker compose exec web python manage.py create_sample_data
-
 # 停止並移除容器
 docker compose down
 
-# 清除資料庫卷冊（會刪除資料）
+# 清除資料庫卷冊（會刪除所有資料並在下次啟動時重新初始化）
 docker compose down --volumes
+
+# 查看日誌
+docker compose logs -f web
 ```
 
 > 環境變數（例如 `POSTGRES_PASSWORD`、`DJANGO_DEBUG`）可以透過 `docker-compose.yml` 直接調整，或在執行 `docker compose` 前於終端機覆寫。
