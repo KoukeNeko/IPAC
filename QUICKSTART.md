@@ -9,6 +9,34 @@ git clone https://github.com/KoukeNeko/ICAP.git
 cd ICAP
 ```
 
+## 使用 Docker 快速啟動
+
+如果你已安裝 Docker 和 Docker Compose，可以直接使用容器化環境啟動專案：
+
+```bash
+docker compose up --build
+```
+
+此指令會：
+- 建立 PostgreSQL 與 Django 服務
+- 自動套用資料庫遷移
+- 透過 http://localhost:8000 提供服務
+
+### 常用 Docker 指令
+
+```bash
+# 匯入範例資料
+docker compose exec web python manage.py create_sample_data
+
+# 停止並移除容器
+docker compose down
+
+# 清除資料庫卷冊（會刪除資料）
+docker compose down --volumes
+```
+
+> 環境變數（例如 `POSTGRES_PASSWORD`、`DJANGO_DEBUG`）可以透過 `docker-compose.yml` 直接調整，或在執行 `docker compose` 前於終端機覆寫。
+
 ## 步驟 2: 安裝依賴
 
 ```bash
