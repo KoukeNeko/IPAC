@@ -36,7 +36,8 @@ echo "執行資料庫遷移..."
 python manage.py migrate --noinput
 
 echo "檢查是否存在使用者帳號..."
-python << END
+set +e
+python << 'END'
 import os
 import django
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'icap_project.settings')
@@ -53,7 +54,10 @@ else:
     exit(1)
 END
 
-if [ $? -eq 0 ]; then
+user_check_exit=$?
+set -e
+
+if [ "$user_check_exit" -eq 0 ]; then
     echo "建立範例資料..."
     python manage.py create_sample_data
     echo "範例資料建立完成!"
