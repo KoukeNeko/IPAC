@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
-import { Download, Plus, Tag, Trash2 } from 'lucide-react'
+import { Download, Plus, Tag, Trash2, LayoutGrid, Table as TableIcon, Server } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -17,11 +17,17 @@ import {
   getSubnets,
 } from '@/lib/ipac-service'
 import type { Host, HostTag, ServiceType, Subnet } from '@/types'
+import { mockRacks } from '@/data/mock'
 
 import { HostDetailDialog } from '@/components/features/hosts/HostDetailDialog'
 import { HostDialog, type HostFormValues } from '@/components/features/hosts/HostDialog'
 import { HostFilters } from '@/components/features/hosts/HostFilters'
 import { HostTable, type HostSortKey } from '@/components/features/hosts/HostTable'
+import { HostTopologyView } from '@/components/features/hosts/HostTopologyView'
+import { NetworkTopologyDiagram } from '@/components/features/hosts/NetworkTopologyDiagram'
+import { RackView } from '@/components/features/hosts/RackView'
+import { Rack3DViewPro } from '@/components/features/hosts/Rack3DViewPro'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
 function HostsPage() {
   const { toast, success, error, info } = useToast()
@@ -40,6 +46,7 @@ function HostsPage() {
   const [detailHost, setDetailHost] = useState<Host | null>(null)
   const [hostToDelete, setHostToDelete] = useState<Host | null>(null)
   const [selectedHostIds, setSelectedHostIds] = useState<string[]>([])
+  const [viewMode, setViewMode] = useState<'table' | 'topology' | 'network' | 'rack' | 'rack3d'>('table')
 
   const { data: subnetData } = useQuery<Subnet[]>({ queryKey: ['subnets'], queryFn: getSubnets })
   const subnets = subnetData ?? []
@@ -191,6 +198,30 @@ function HostsPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as 'table' | 'topology' | 'network' | 'rack' | 'rack3d')}>
+            <TabsList>
+              <TabsTrigger value="table" className="gap-2">
+                <TableIcon className="h-4 w-4" />
+                表格
+              </TabsTrigger>
+              <TabsTrigger value="rack" className="gap-2">
+                <Server className="h-4 w-4" />
+                機櫃
+              </TabsTrigger>
+              <TabsTrigger value="rack3d" className="gap-2">
+                <Server className="h-4 w-4" />
+                3D 機櫃
+              </TabsTrigger>
+              <TabsTrigger value="topology" className="gap-2">
+                <LayoutGrid className="h-4 w-4" />
+                卡片
+              </TabsTrigger>
+              <TabsTrigger value="network" className="gap-2">
+                <Download className="h-4 w-4 rotate-90" />
+                網路圖
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
           <Button variant="outline" onClick={() => refetch()} disabled={isFetching}>
             {isFetching ? <Spinner size="sm" className="mr-2" /> : null}
             重新整理
@@ -240,59 +271,69 @@ function HostsPage() {
 
       {isLoading ? (
         <HostSkeleton />
-      ) : (
-        <HostTable
-          hosts={paginatedHosts}
-          sortBy={sortBy}
-          sortDirection={sortDirection}
-          onSort={handleSort}
-          onEditHost={handleEditHost}
-          onDeleteHost={(host) => setHostToDelete(host)}
-          onPingHost={(host) => bulkPingMutation.mutate([host.id])}
-          onShowDetail={setDetailHost}
-          onDragReorder={(reordered) => {
-            queryClient.setQueryData<Host[]>(['hosts', { searchKeyword, selectedSubnets, selectedServices, selectedStatuses, selectedTags }], (old) => {
-              if (!old) return old
-              const map = new Map(reordered.map((host) => [host.id, host]))
-              return old.map((host) => map.get(host.id) ?? host)
-            })
-          }}
-          selectedHostIds={selectedHostIds}
-          onSelectHost={toggleHostSelection}
-          onSelectAll={handleSelectAll}
-        />
-      )}
+      ) : viewMode === 'table' ? (
+        <>
+          <HostTable
+            hosts={paginatedHosts}
+            sortBy={sortBy}
+            sortDirection={sortDirection}
+            onSort={handleSort}
+            onEditHost={handleEditHost}
+            onDeleteHost={(host) => setHostToDelete(host)}
+            onPingHost={(host) => bulkPingMutation.mutate([host.id])}
+            onShowDetail={setDetailHost}
+            onDragReorder={(reordered) => {
+              queryClient.setQueryData<Host[]>(['hosts', { searchKeyword, selectedSubnets, selectedServices, selectedStatuses, selectedTags }], (old) => {
+                if (!old) return old
+                const map = new Map(reordered.map((host) => [host.id, host]))
+                return old.map((host) => map.get(host.id) ?? host)
+              })
+            }}
+            selectedHostIds={selectedHostIds}
+            onSelectHost={toggleHostSelection}
+            onSelectAll={handleSelectAll}
+          />
 
-      <div className="flex items-center justify-between text-xs text-muted-foreground">
-        <span>
-          顯示第 {pagination.pageIndex * pagination.pageSize + 1} -
-          {Math.min((pagination.pageIndex + 1) * pagination.pageSize, sortedHosts.length)} 筆，共 {sortedHosts.length} 筆
-        </span>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => pagination.onPageChange(Math.max(pagination.pageIndex - 1, 0))}
-            disabled={pagination.pageIndex === 0}
-          >
-            上一頁
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() =>
-              pagination.onPageChange(
-                pagination.pageIndex + 1 < Math.ceil(sortedHosts.length / pagination.pageSize)
-                  ? pagination.pageIndex + 1
-                  : pagination.pageIndex
-              )
-            }
-            disabled={(pagination.pageIndex + 1) * pagination.pageSize >= sortedHosts.length}
-          >
-            下一頁
-          </Button>
-        </div>
-      </div>
+          <div className="flex items-center justify-between text-xs text-muted-foreground">
+            <span>
+              顯示第 {pagination.pageIndex * pagination.pageSize + 1} -
+              {Math.min((pagination.pageIndex + 1) * pagination.pageSize, sortedHosts.length)} 筆，共 {sortedHosts.length} 筆
+            </span>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => pagination.onPageChange(Math.max(pagination.pageIndex - 1, 0))}
+                disabled={pagination.pageIndex === 0}
+              >
+                上一頁
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  pagination.onPageChange(
+                    pagination.pageIndex + 1 < Math.ceil(sortedHosts.length / pagination.pageSize)
+                      ? pagination.pageIndex + 1
+                      : pagination.pageIndex
+                  )
+                }
+                disabled={(pagination.pageIndex + 1) * pagination.pageSize >= sortedHosts.length}
+              >
+                下一頁
+              </Button>
+            </div>
+          </div>
+        </>
+      ) : viewMode === 'rack' ? (
+        <RackView hosts={sortedHosts} racks={mockRacks} onHostClick={setDetailHost} />
+      ) : viewMode === 'rack3d' ? (
+        <Rack3DViewPro hosts={sortedHosts} racks={mockRacks} onHostClick={setDetailHost} />
+      ) : viewMode === 'topology' ? (
+        <HostTopologyView hosts={sortedHosts} onHostClick={setDetailHost} />
+      ) : (
+        <NetworkTopologyDiagram hosts={sortedHosts} subnets={subnets} onHostClick={setDetailHost} />
+      )}
 
       <HostDialog
         open={isDialogOpen}

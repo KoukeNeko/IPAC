@@ -1,5 +1,7 @@
 export type HostStatus = 'online' | 'offline' | 'idle'
 
+export type HostType = 'physical' | 'vm'
+
 export type ServiceType =
   | 'Web'
   | 'Database'
@@ -28,6 +30,23 @@ export interface Host {
   lastSeenAt: string
   description?: string
   tags: HostTag[]
+  hostType?: HostType
+  parentHostId?: string // 如果是 VM，指向實體機的 ID
+  vmCount?: number // 如果是實體機，記錄上面的 VM 數量
+  rackId?: string // 所屬機櫃 ID
+  rackPosition?: number // 在機櫃中的 U 位（1-42）
+  rackUnits?: number // 佔用的 U 數（通常 1U, 2U, 4U）
+}
+
+export interface Rack {
+  id: string
+  name: string
+  location: string
+  totalUnits: number // 總 U 數，通常是 42U
+  usedUnits: number
+  powerCapacity: number // 電力容量（瓦）
+  description?: string
+  color?: string
 }
 
 export interface Subnet {

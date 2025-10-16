@@ -73,20 +73,20 @@ function DashboardPage() {
           title="總 IP 可用量"
           subtitle="跨網段可配置 IP"
           icon={<Server className="h-5 w-5 text-primary" />}
-          value={data.totalIps.toLocaleString()}
+          value={(data.totalIps ?? 0).toLocaleString()}
         />
         <StatCard
           title="線上主機"
           subtitle="目前可連線"
           icon={<Wifi className="h-5 w-5 text-emerald-500" />}
-          value={data.onlineHosts.toLocaleString()}
+          value={(data.onlineHosts ?? 0).toLocaleString()}
           trend="穩定"
         />
         <StatCard
           title="離線主機"
           subtitle="需關注"
           icon={<Activity className="h-5 w-5 text-amber-500" />}
-          value={data.offlineHosts.toLocaleString()}
+          value={(data.offlineHosts ?? 0).toLocaleString()}
           trendClassName="text-amber-500"
           trend="待確認"
         />
@@ -94,7 +94,7 @@ function DashboardPage() {
           title="IP 衝突預警"
           subtitle="即時偵測"
           icon={<AlertTriangle className="h-5 w-5 text-rose-500" />}
-          value={data.conflictCount}
+          value={data.conflictCount ?? 0}
           trendClassName="text-rose-500"
           trend="需立即處理"
         />

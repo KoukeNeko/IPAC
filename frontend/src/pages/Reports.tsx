@@ -217,7 +217,7 @@ function ReportsPage() {
             <div key={report.id} className="flex flex-col gap-3 rounded-lg border border-border/60 bg-muted/30 p-4 md:flex-row md:items-center md:justify-between">
               <div>
                 <p className="text-sm font-medium text-foreground">報表：{typeOptions.find((item) => item.value === report.type)?.label}</p>
-                <p className="text-xs text-muted-foreground">產出時間：{new Date(report.generatedAt).toLocaleString()}</p>
+                <p className="text-xs text-muted-foreground">產出時間：{report.generatedAt ? new Date(report.generatedAt).toLocaleString() : 'N/A'}</p>
                 <p className="mt-2 text-sm text-muted-foreground">{report.summary}</p>
               </div>
               <div className="flex items-center gap-2">
