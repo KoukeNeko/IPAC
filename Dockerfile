@@ -15,10 +15,11 @@ RUN pip install --no-cache-dir -r /tmp/requirements.txt
 
 COPY . .
 
-# 複製並設定啟動腳本權限
-COPY docker-entrypoint.sh /app/docker-entrypoint.sh
-RUN chmod +x /app/docker-entrypoint.sh
+# 設定啟動腳本權限並確保使用 Unix 行尾字元
+RUN chmod +x /app/docker-entrypoint.sh && \
+    sed -i 's/\r$//' /app/docker-entrypoint.sh
 
 EXPOSE 8000
 
-ENTRYPOINT ["/app/docker-entrypoint.sh"]
+# 使用 sh 作為 ENTRYPOINT，並在啟動時處理行尾字元
+ENTRYPOINT ["sh", "-c", "sed -i 's/\r$//' /app/docker-entrypoint.sh && chmod +x /app/docker-entrypoint.sh && /app/docker-entrypoint.sh"]
